@@ -18,7 +18,11 @@ PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 APP_NAME_RE = re.compile(r"^[a-z][a-z0-9_-]*$")
 RESERVED_APPS = {"menu", "startup"}
 
-BADGEWARE_NAMES = {"State", "fatal_error"}
+
+# `display` is a legitimate runtime-provided badgeware object (backlight
+# control, etc.), inherited from Pimoroni's firmware. It was missing here;
+# apps are allowed to `from badgeware import display`.
+BADGEWARE_NAMES = {"State", "fatal_error", "display"}
 
 HARDWARE_ONLY_MODULES = {
     "aioble",
