@@ -7,7 +7,7 @@ but receives future badge runtime and hardware changes through
 
 ## For teams with no local work
 
-1. Fork the maintained Campus Experts repository.
+1. Fork this Campus Experts repository. (ce-badge-universe26-hack-OFFICIAL)
 2. Invite the other team members to that shared fork.
 3. Clone the shared fork and add the maintained Campus repository as `upstream`.
 4. Follow [CONTRIBUTING.md](../CONTRIBUTING.md) from the team-folder step.
