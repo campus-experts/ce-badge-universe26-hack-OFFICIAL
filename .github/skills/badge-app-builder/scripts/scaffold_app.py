@@ -11,7 +11,7 @@ import zlib
 from pathlib import Path
 
 
-APP_NAME_RE = re.compile(r"^[a-z][a-z0-9_-]*$")
+APP_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 RESERVED_APPS = {"menu", "startup"}
 REPO_ROOT = Path(__file__).resolve().parents[4]
 
@@ -106,7 +106,7 @@ run(update)
 def scaffold(app_name: str, title: str, apps_dir: Path) -> Path:
     if not APP_NAME_RE.fullmatch(app_name):
         raise ValueError(
-            "App name must start with a lowercase letter and contain only "
+            "App name must start with a lowercase letter or number and contain only "
             "lowercase letters, numbers, hyphens, or underscores."
         )
     if app_name in RESERVED_APPS:

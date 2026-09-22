@@ -15,10 +15,18 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
-APP_NAME_RE = re.compile(r"^[a-z][a-z0-9_-]*$")
+APP_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 RESERVED_APPS = {"menu", "startup"}
 
-BADGEWARE_NAMES = {"State", "fatal_error"}
+# Built-in apps that intentionally have no persistent update()/run() frame
+# loop. mass_storage draws a message, calls powman.reset_into_msc(), and reboots.
+LIFECYCLE_OPTIONAL_PATHS = {Path("badge/apps/mass_storage")}
+
+
+# `display` is a legitimate runtime-provided badgeware object (backlight
+# control, etc.), inherited from Pimoroni's firmware. It was missing here;
+# apps are allowed to `from badgeware import display`.
+BADGEWARE_NAMES = {"State", "fatal_error", "display"}
 
 HARDWARE_ONLY_MODULES = {
     "aioble",
@@ -422,12 +430,17 @@ def validate_app(app_dir: Path, repo_root: Path, target: str = "both") -> list[I
     if not app_dir.is_dir():
         return [Issue("ERROR", f"App directory does not exist: {app_dir}")]
 
+    lifecycle_optional = any(
+        app_dir.resolve() == (repo_root / path).resolve()
+        for path in LIFECYCLE_OPTIONAL_PATHS
+    )
+
     if not APP_NAME_RE.fullmatch(app_dir.name):
         issues.append(
             Issue(
                 "ERROR",
-                "App directory must start with a lowercase letter and contain only "
-                "lowercase letters, numbers, hyphens, or underscores.",
+                "App directory name must start with a lowercase letter or number and "
+                "contain only lowercase letters, numbers, hyphens, or underscores.",
                 app_dir,
             )
         )
@@ -500,7 +513,10 @@ def validate_app(app_dir: Path, repo_root: Path, target: str = "both") -> list[I
 
     entry_visitor = parsed.get(entrypoint)
     if entry_visitor is not None:
-        if "update" not in entry_visitor.bindings:
+        if (
+            "update" not in entry_visitor.bindings
+            and not lifecycle_optional
+        ):
             issues.append(
                 Issue(
                     "ERROR",
@@ -728,7 +744,11 @@ def validate_app(app_dir: Path, repo_root: Path, target: str = "both") -> list[I
                                     guarded.lineno,
                                 )
                             )
-                if not saw_module_scope_run and not guarded_run:
+                if (
+                    not saw_module_scope_run
+                    and not guarded_run
+                    and not lifecycle_optional
+                ):
                     issues.append(
                         Issue(
                             "ERROR",
