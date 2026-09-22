@@ -439,8 +439,8 @@ def validate_app(app_dir: Path, repo_root: Path, target: str = "both") -> list[I
         issues.append(
             Issue(
                 "ERROR",
-                "App directory must be lowercase and contain only lowercase "
-                "letters, numbers, hyphens, or underscores.",
+                "App directory name must start with a lowercase letter or number and "
+                "contain only lowercase letters, numbers, hyphens, or underscores.",
                 app_dir,
             )
         )
