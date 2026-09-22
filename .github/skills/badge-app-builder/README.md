@@ -12,12 +12,11 @@ Hackable Conference Badge.
   current apps.
 - Scaffolding and validating an app.
 - Iterating with the [Pimoroni Badgeware Web Simulator](https://pimoroni.github.io/badgeware-web-simulator/)
-  for a quick browser check, or the local Pygame simulator for
-  repository-local, command-line iteration.
+  for a quick browser check.
 - Safely copying one app to a physical badge in USB Disk Mode.
 
 The skill treats the physical RP2350B badge as the compatibility target. It
-explicitly identifies behavior that the desktop simulator cannot prove.
+explicitly identifies behavior that the web simulator cannot prove.
 Universe 2025 Badgeware examples are archived upstream under `badge25/` and
 must not be used as the active API for new apps.
 

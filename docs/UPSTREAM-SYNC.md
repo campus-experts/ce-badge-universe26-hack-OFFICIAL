@@ -9,7 +9,6 @@ be refreshed by replacing whole directories.
 | Area | Owner | Change rule |
 |---|---|---|
 | `badge/` runtime, hardware, and upstream examples | `badger/home` | Sync from upstream; make local changes only when the Campus layer needs a documented compatibility fix |
-| `simulator/` | Campus layer, with upstream reference | Keep the local command-line simulator only where it helps the Campus workflow; document browser simulator behavior separately |
 | `.github/skills/badge-app-builder/` | Campus layer | Keep the skill aligned with the active 2026 runtime and repository workflow |
 | `Team1/` through `Team4/` | Campus layer | Campus Expert submissions only |
 | `docs/`, `CONTRIBUTING.md`, and Campus workflow files | Campus layer | Update when the team workflow or upstream boundary changes |
@@ -30,8 +29,7 @@ Instead:
 1. Create the maintained Campus Experts repository as a fork of
    `badger/home`.
 2. Add the Campus layer from the old repository: team folders, Campus
-   documentation, the builder skill, validation tools, and the local
-   simulator where it is still needed.
+   documentation, the builder skill, and validation tools.
 3. Review every overlapping `badge/` file against `badger/home` and keep the
    upstream version unless a Campus compatibility change is documented.
 4. Run the repository checks and test one complete Campus team fork before
@@ -99,7 +97,7 @@ directly from `badger-home` in a team app branch.
    ```bash
    python3 -m unittest discover \
      -s .github/skills/badge-app-builder/tests -v
-   python3 -m compileall -q badge simulator .github/skills/badge-app-builder
+   python3 -m compileall -q badge .github/skills/badge-app-builder
    python3 .github/skills/badge-app-builder/scripts/validate_submissions.py badge/apps
    python3 .github/skills/badge-app-builder/scripts/validate_submissions.py
    ```
@@ -124,7 +122,6 @@ That bypasses the maintained fork and makes later review harder.
 
 ## Simulator policy
 
-The Pimoroni web simulator is the preferred quick browser preview. The local
-Pygame simulator is retained for repository-local files, hot reload, and
-repeatable command-line checks. Neither simulator proves physical behavior for
-BLE, GPIO, IR, LEDs, battery, radio, memory, or exact timing.
+The [Pimoroni Badgeware Web Simulator](https://pimoroni.github.io/badgeware-web-simulator/)
+is the preferred, no-install way to preview an app. It cannot prove physical
+behavior for BLE, GPIO, IR, LEDs, battery, radio, memory, or exact timing.

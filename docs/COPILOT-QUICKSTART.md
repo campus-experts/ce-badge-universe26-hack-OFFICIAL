@@ -4,19 +4,8 @@ Use this page for the shortest path from an idea to a tested app.
 
 ## 1. Set up the repository
 
-From the repository root:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-```
-
-On Windows PowerShell, activate the environment with:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
+Use Python 3.10 or newer (only the standard library is required -- no
+`pip install` needed).
 
 ## 2. Update your team fork and create a branch
 
@@ -46,7 +35,7 @@ the choice. The choice must still be there after I close and reopen the app.
 Use the badge-app-builder skill and inspect the closest examples in
 badge/apps before writing code. Do not change badge/apps because those are
 shared examples. Create a 24x24 icon, validate the app, and tell me what I
-must test in the simulator and on a physical badge.
+must test in the Pimoroni Badgeware Web Simulator and on a physical badge.
 ```
 
 Good prompts tell Copilot:
@@ -65,32 +54,26 @@ Copilot should run the validator. You can also run it yourself:
 ```bash
 python3 .github/skills/badge-app-builder/scripts/validate_app.py \
   Team1/countdown
-python3 simulator/badge_simulator.py Team1/countdown
 ```
 
-For a quick browser preview, use the
-[Pimoroni Badgeware Web Simulator](https://pimoroni.github.io/badgeware-web-simulator/).
-The local simulator is better for local app files, command-line checks, hot
-reload, and repeatable team validation.
-
-In the simulator:
+Test the app in the
+[Pimoroni Badgeware Web Simulator](https://pimoroni.github.io/badgeware-web-simulator/):
 
 - Use A, B, C, and the arrow keys to test every control.
-- Press `R` after a code change to reload the app.
-- Press `H` or `Esc` to check that HOME returns to the launcher.
-- Run once with `--clean` to test the first-use experience.
-- Run with `--perf` if the app uses several images or animations.
+- Reload after a code change to test the updated app.
+- Check that HOME returns to the launcher.
+- Test a fresh load to check the first-use experience.
 
-The simulator cannot prove that BLE, GPIO, physical IR, LEDs, battery behavior,
-radio behavior, or exact badge performance works.
+The web simulator cannot prove that BLE, GPIO, physical IR, LEDs, battery
+behavior, radio behavior, or exact badge performance works.
 
 ## 5. Ask Copilot to check the finished work
 
 ```text
 Review Team1/countdown as a badge submission. Fix validation errors, test every
-screen and control in the simulator, check for secrets and generated files,
-and list anything that still needs a physical badge test. Do not edit files
-outside Team1/countdown unless a shared tool is broken.
+screen and control in the Pimoroni Badgeware Web Simulator, check for secrets
+and generated files, and list anything that still needs a physical badge test.
+Do not edit files outside Team1/countdown unless a shared tool is broken.
 ```
 
 Check every app in the team folder:

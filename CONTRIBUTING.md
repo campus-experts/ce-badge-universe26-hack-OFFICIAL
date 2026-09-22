@@ -140,16 +140,13 @@ python3 .github/skills/badge-app-builder/scripts/validate_app.py \
   Team1/app-name
 ```
 
-Fix all validation errors. Then run the app in the simulator:
-
-```bash
-python3 simulator/badge_simulator.py Team1/app-name
-```
+Fix all validation errors. Then test the app in the
+[Pimoroni Badgeware Web Simulator](https://pimoroni.github.io/badgeware-web-simulator/):
 
 Test every screen and button path. Test the first run and any saved state. The
-simulator cannot prove that BLE, GPIO, IR, LEDs, battery behavior, exact timing,
-or memory use will work on a physical badge. State these limits in the pull
-request if your app uses hardware-only features.
+web simulator cannot prove that BLE, GPIO, IR, LEDs, battery behavior, exact
+timing, or memory use will work on a physical badge. State these limits in the
+pull request if your app uses hardware-only features.
 
 Before merging into the shared fork, confirm:
 
@@ -160,7 +157,7 @@ Before merging into the shared fork, confirm:
   python3 .github/skills/badge-app-builder/scripts/validate_submissions.py Team1
   ```
 
-- The app was tested in the simulator.
+- The app was tested in the Pimoroni Badgeware Web Simulator.
 - Another teammate reviewed the pull request.
 - All changed files are inside the assigned team folder.
 - No secrets, local state, generated screenshots, or editor files are present.
@@ -179,7 +176,7 @@ When all team pull requests are merged into the shared fork:
    git push origin main
    ```
 
-3. Run the validator and simulator again for every team app.
+3. Run the validator and test in the simulator again for every team app.
    Run `validate_submissions.py TeamN` once as the final team-wide check.
 4. Open one pull request with:
    - **Base repository:** `campus-experts/ce-badge-universe26-hack-OFFICIAL`
@@ -196,8 +193,8 @@ pull request containing the team's complete work.
 ## If you have a merge conflict
 
 Do not delete another teammate's work. Ask the teammate who changed the same
-file to help resolve the conflict. Run the validator and simulator again after
-the conflict is fixed.
+file to help resolve the conflict. Run the validator and test in the simulator
+again after the conflict is fixed.
 
 ## 7. Updating the maintained Campus Experts repository
 
