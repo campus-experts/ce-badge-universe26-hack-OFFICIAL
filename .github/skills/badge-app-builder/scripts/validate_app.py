@@ -450,8 +450,8 @@ def validate_app(app_dir: Path, repo_root: Path, target: str = "both") -> list[I
                 issues.append(
                     Issue(
                         "ERROR",
-                        "Only __init__.mpy is present; the emulator loads apps with "
-                        "CPython and requires __init__.py.",
+                        "Only __init__.mpy is present; validation and simulator "
+                        "testing require source __init__.py.",
                         app_dir,
                     )
                 )
@@ -758,8 +758,9 @@ def validate_app(app_dir: Path, repo_root: Path, target: str = "both") -> list[I
             Issue(
                 "WARNING",
                 f"{image_count} statically referenced PNGs estimate to "
-                f"{estimated_bytes / 1024:.1f} KiB decoded, above the simulator's "
-                "high-risk 400 KiB guideline. Load assets on demand and verify on hardware.",
+                f"{estimated_bytes / 1024:.1f} KiB decoded, above the "
+                "400 KiB high-risk guideline for RP2350 SRAM. Load assets on "
+                "demand and verify memory on hardware.",
                 app_dir,
             )
         )

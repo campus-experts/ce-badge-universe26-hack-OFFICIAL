@@ -1,7 +1,7 @@
 ---
 name: badge-app-builder
 description: Build, debug, validate, emulate, and deploy MicroPython apps for the GitHub Hackable Conference Badge. Use when someone has an app idea, edits TeamN apps or badge/apps examples, asks about Badgeware, runs the badge simulator, or wants to test on a physical BADGER device.
-compatibility: Requires Python 3.10+ for bundled tools. Emulator use requires Pygame and optionally psutil. Physical deployment requires a mounted BADGER USB volume. Advanced API verification may require GitHub access.
+compatibility: Requires Python 3.10+ for bundled tools (standard library only). Emulator use requires a browser and no local install. Physical deployment requires a mounted BADGER USB volume. Advanced API verification may require GitHub access.
 license: MIT
 metadata:
   summary: Turn an idea into a validated badge app for the emulator and physical hardware.

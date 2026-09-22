@@ -19,7 +19,7 @@ hardware checklist.
 - Creates a path-safe app with `__init__.py`, `icon.png`, and optional assets.
 - Uses the 2026 `badge` API, logical controls, `State`, `run()`, and no desktop
   dependencies.
-- Runs the validator and provides an emulator command.
+- Runs the validator and points to the web simulator for a visual check.
 
 ## Existing game improvement
 
@@ -62,7 +62,8 @@ hardware checklist.
 - Uses root `secrets.py` without embedding or copying credentials.
 - Implements timeout, failure, cached/offline, and incremental fetch behavior.
 - Avoids loading an unbounded response into SRAM.
-- Tests first-run behavior with the simulator's clean-state option.
+- Tests first-run behavior in a fresh simulator session (or after clearing any
+  saved app state files) before running.
 
 ## Physical deployment
 

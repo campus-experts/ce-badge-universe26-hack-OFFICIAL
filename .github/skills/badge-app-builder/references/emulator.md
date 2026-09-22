@@ -9,8 +9,9 @@ behavior.
 ## Setup
 
 No local install is required. Open
-https://pimoroni.github.io/badgeware-web-simulator/ and load the app's
-`__init__.py` (and any local modules or assets).
+https://pimoroni.github.io/badgeware-web-simulator/ (or https://try.badgewa.re),
+paste the app's `__init__.py` (and any local modules or assets) into the
+editor, and press F5 or **Run**.
 
 If you want offline or command-line testing instead, see
 [`pimoroni/badgeware-simulator`](https://github.com/pimoroni/badgeware-simulator),
@@ -19,17 +20,17 @@ library.
 
 ## Controls
 
-Use the simulator's logical controls, which follow the physical badge's
-layout:
+Click the 3D badge once to give it keyboard focus, then use:
 
-- Arrow keys or on-screen buttons: directional actions.
-- Enter/select: SELECT.
-- Back/escape: BACK.
-- Menu: MENU.
-- Home: return to the launcher.
+- Left arrow: A.
+- Space: B.
+- Right arrow: C.
+- Up/Down arrows: Up/Down.
+- Esc: Home (badgeOS menu).
+- F5 or Run: run the code in the editor.
 
-The exact controls are shown in the simulator UI and may change as the 2026
-input model gains touch and orientation support.
+These are the simulator's own documented controls (https://try.badgewa.re)
+and may change as Pimoroni updates it.
 
 ## What to test
 
