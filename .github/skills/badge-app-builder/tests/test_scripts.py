@@ -48,6 +48,18 @@ class SkillScriptTests(unittest.TestCase):
                 [issue for issue in issues if "__main__" in issue.message]
             )
 
+    def test_scaffold_accepts_digit_leading_app_name(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self.create_system_font(root)
+            app_dir = scaffold_app.scaffold(
+                "30_minutes", "30 Minutes", root / "badge" / "apps"
+            )
+
+            issues = validate_app.validate_app(app_dir, root)
+
+            self.assertFalse([issue for issue in issues if issue.severity == "ERROR"])
+
     def test_validator_rejects_main_guarded_run(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -87,6 +99,25 @@ class SkillScriptTests(unittest.TestCase):
                     and "Missing module-scope run()" in issue.message
                     for issue in issues
                 )
+            )
+
+    def test_team_mass_storage_requires_standard_lifecycle(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            app_dir = root / "Team1" / "mass_storage"
+            app_dir.mkdir(parents=True)
+            (app_dir / "__init__.py").write_text("value = 1\n", encoding="utf-8")
+
+            issues = validate_app.validate_app(app_dir, root)
+            messages = {
+                issue.message for issue in issues if issue.severity == "ERROR"
+            }
+
+            self.assertTrue(
+                any("Required update binding is missing" in message for message in messages)
+            )
+            self.assertTrue(
+                any("Missing module-scope run()" in message for message in messages)
             )
 
     def test_validator_checks_run_arguments(self):

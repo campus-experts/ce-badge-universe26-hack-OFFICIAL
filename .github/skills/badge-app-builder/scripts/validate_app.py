@@ -18,13 +18,9 @@ PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 APP_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 RESERVED_APPS = {"menu", "startup"}
 
-# Apps that intentionally have no persistent update()/run() frame loop. They
-# perform a one-time action (draw a message, then hand off to firmware/OS)
-# instead of running every frame, the same way `menu`/`startup` are the only
-# other apps with special-cased lifecycles. Verified against each app's own
-# source, not assumed: e.g. mass_storage draws a message then calls
-# powman.reset_into_msc() and reboots -- it never returns to a frame loop.
-LIFECYCLE_OPTIONAL_APPS = {"mass_storage"}
+# Built-in apps that intentionally have no persistent update()/run() frame
+# loop. mass_storage draws a message, calls powman.reset_into_msc(), and reboots.
+LIFECYCLE_OPTIONAL_PATHS = {Path("badge/apps/mass_storage")}
 
 
 # `display` is a legitimate runtime-provided badgeware object (backlight
@@ -434,6 +430,11 @@ def validate_app(app_dir: Path, repo_root: Path, target: str = "both") -> list[I
     if not app_dir.is_dir():
         return [Issue("ERROR", f"App directory does not exist: {app_dir}")]
 
+    lifecycle_optional = any(
+        app_dir.resolve() == (repo_root / path).resolve()
+        for path in LIFECYCLE_OPTIONAL_PATHS
+    )
+
     if not APP_NAME_RE.fullmatch(app_dir.name):
         issues.append(
             Issue(
@@ -514,7 +515,7 @@ def validate_app(app_dir: Path, repo_root: Path, target: str = "both") -> list[I
     if entry_visitor is not None:
         if (
             "update" not in entry_visitor.bindings
-            and app_dir.name not in LIFECYCLE_OPTIONAL_APPS
+            and not lifecycle_optional
         ):
             issues.append(
                 Issue(
@@ -746,7 +747,7 @@ def validate_app(app_dir: Path, repo_root: Path, target: str = "both") -> list[I
                 if (
                     not saw_module_scope_run
                     and not guarded_run
-                    and app_dir.name not in LIFECYCLE_OPTIONAL_APPS
+                    and not lifecycle_optional
                 ):
                     issues.append(
                         Issue(
