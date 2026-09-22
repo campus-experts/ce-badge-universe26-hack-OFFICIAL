@@ -152,7 +152,7 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"Created badge app: {app_dir}")
     print(f"Validate: python3 .github/skills/badge-app-builder/scripts/validate_app.py {app_dir}")
-    print(f"Run: python3 simulator/badge_simulator.py {app_dir}")
+    print("Preview: https://pimoroni.github.io/badgeware-web-simulator/")
     return 0
 
 

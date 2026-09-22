@@ -17,7 +17,7 @@
 
 - [ ] Every app passes `validate_app.py`.
 - [ ] `validate_submissions.py TeamN` passes.
-- [ ] Every screen and button path was tested in a simulator (the [Pimoroni web simulator](https://pimoroni.github.io/badgeware-web-simulator/) or the local `simulator/badge_simulator.py`).
+- [ ] Every simulator-supported screen and button path was tested in the [Pimoroni Badgeware Web Simulator](https://pimoroni.github.io/badgeware-web-simulator/); hardware-only paths are listed under Physical badge checks.
 - [ ] HOME returns to the launcher.
 - [ ] First-run and saved-state behavior were tested.
 - [ ] All submission files are inside the assigned `TeamN/` folder.

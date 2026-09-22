@@ -4,7 +4,7 @@ This repository targets the **GitHub Universe 2026 badge** by default and also
 hosts the Campus Experts hackathon workflow layered on top of it. Upstream
 badge runtime, hardware, and legacy 2025 material live in `badge/`, `badge25/`,
 `hardware/`, `eink/`, and `ir-beacon/`. Campus Experts workflow, tooling, and
-team submissions live in `Team1/`-`Team4/`, `docs/`, `simulator/`,
+team submissions live in `Team1/`-`Team4/`, `docs/`,
 and `.github/skills/badge-app-builder/`. See
 [`docs/UPSTREAM-SYNC.md`](../docs/UPSTREAM-SYNC.md) for the full ownership
 boundary and sync policy.
@@ -53,24 +53,19 @@ the graphics, input, timing, orientation, lifecycle, and state APIs. Use
 `badge/apps/input_test/`, `badge/apps/demos/` and `badge/apps/plucky_cluck/` as
 primary references.
 
-## Campus Experts workflow (`TeamN/`, `docs/`, `simulator/`)
+## Campus Experts workflow (`TeamN/`, `docs/`)
 
-Use the physical badge as the compatibility target. Two simulators are
-available for fast iteration, but neither can prove BLE, GPIO, IR electrical
-behavior, real timing, power use, or exact memory behavior:
-
-- The [Pimoroni Badgeware Web Simulator](https://pimoroni.github.io/badgeware-web-simulator/)
-  runs in a browser with no install. Suggest it first for a quick visual
-  check of an idea, especially when Python/Pygame is not set up locally.
-- The local `simulator/badge_simulator.py` (Pygame) is better for this
-  repository's files, hot reload, screenshots, `--perf` profiling, and
-  repeatable command-line validation before a pull request.
+Use the physical badge as the compatibility target. The
+[Pimoroni Badgeware Web Simulator](https://pimoroni.github.io/badgeware-web-simulator/)
+runs in a browser with no install and is the recommended way to iterate
+quickly on an idea. It cannot prove BLE, GPIO, IR electrical behavior, real
+timing, power use, or exact memory behavior.
 
 1. Before creating an app, identify the user's assigned `TeamN` folder from
    their prompt or current app path. Do not place a CE submission in
    `badge/apps/`.
 2. Use the `badge-app-builder` skill for app creation, debugging, validation,
-   simulator work, and physical badge deployment.
+   simulator testing, and physical badge deployment.
 3. Read the closest example in `badge/apps/` before creating an app.
 4. Read the relevant reference in
    `.github/skills/badge-app-builder/references/`.
@@ -92,7 +87,7 @@ behavior, real timing, power use, or exact memory behavior:
 13. Call `run(update)` at module scope. Do not put it behind an
     `if __name__ == "__main__"` guard; the physical launcher imports apps.
 14. Before declaring Campus Experts repository work complete, run the exact
-    repository checks listed below. Do not rely only on a simulator launch or
+    repository checks listed below. Do not rely only on a simulator preview or
     unresolved review thread status.
 
 ### Campus Experts commands
@@ -101,22 +96,20 @@ behavior, real timing, power use, or exact memory behavior:
 python3 .github/skills/badge-app-builder/scripts/scaffold_app.py my-app \
   --title "My App" --apps-dir Team1
 python3 .github/skills/badge-app-builder/scripts/validate_app.py Team1/my-app
-python3 simulator/badge_simulator.py Team1/my-app
 ```
 
-Replace `Team1` with the team's assigned folder. For a quick browser preview
-instead of (or before) the local simulator, point the user to
-https://pimoroni.github.io/badgeware-web-simulator/.
+Replace `Team1` with the team's assigned folder. For a visual check of the
+app, point the user to the
+[Pimoroni Badgeware Web Simulator](https://pimoroni.github.io/badgeware-web-simulator/).
 
-Use `--target hardware` when checking a hardware-only feature. Use
-`--screenshots`, `--clean`, and `--perf` when those checks matter.
+Use `--target hardware` when checking a hardware-only feature.
 
 For changes to shared code, examples, validators, or workflows, run:
 
 ```bash
 python3 -m unittest discover \
   -s .github/skills/badge-app-builder/tests -v
-python3 -m compileall -q badge simulator .github/skills/badge-app-builder
+python3 -m compileall -q badge .github/skills/badge-app-builder
 python3 .github/skills/badge-app-builder/scripts/validate_submissions.py badge/apps
 python3 .github/skills/badge-app-builder/scripts/validate_submissions.py
 ```

@@ -11,8 +11,7 @@ This repository includes:
 
 - The `badge-app-builder` Copilot skill.
 - The [Pimoroni Badgeware Web Simulator](https://pimoroni.github.io/badgeware-web-simulator/)
-  as the preferred quick browser preview, plus a local Pygame simulator for
-  repository-local, command-line testing.
+  for quick, no-install browser testing.
 - App validation and physical-badge deployment scripts.
 - Working Universe 2026 examples for screens, games, saved state, images,
   Wi-Fi, IR, BLE,
@@ -30,7 +29,6 @@ This repository includes:
 | [`ir-beacon/`](./ir-beacon/) | IR beacon utilities and protocol experiments |
 | `Team1/`-`Team4/` | Campus Experts team app submissions |
 | [`docs/`](./docs/) | Campus Experts and fork/sync documentation |
-| [`simulator/`](./simulator/) | Local Pygame simulator |
 | [`.github/skills/badge-app-builder/`](./.github/skills/badge-app-builder/) | Copilot skill for building badge apps |
 
 See the [Universe 2026 hardware reference](./hardware/README.md) for the
@@ -50,7 +48,8 @@ accelerometer, IR, capacitive-control, or firmware APIs exactly:
 - [`pimoroni/badgeware-docs`](https://github.com/pimoroni/badgeware-docs)
   Badgeware documentation and examples
 - [`pimoroni/badgeware-simulator`](https://github.com/pimoroni/badgeware-simulator)
-  desktop Badgeware Simulator (an alternative to this repo's local simulator)
+  native, buildable desktop Badgeware Simulator built on the real PicoVector
+  graphics library -- a good option if you want offline/command-line testing
 - [`pimoroni/badgeware-web-simulator`](https://github.com/pimoroni/badgeware-web-simulator)
   source for the browser-based simulator linked above
 
@@ -66,13 +65,8 @@ For the shortest path, follow
 
 ## Start here
 
-Install Python 3.10 or newer and create a virtual environment:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-```
+Use Python 3.10 or newer (only the standard library is required -- no
+`pip install` needed).
 
 Tell Copilot your team folder, app path, idea, and controls:
 
@@ -118,11 +112,9 @@ python3 .github/skills/badge-app-builder/scripts/validate_app.py \
   Team1/countdown
 ```
 
-Run it in the simulator:
-
-```bash
-python3 simulator/badge_simulator.py Team1/countdown
-```
+Run it in the [Pimoroni Badgeware Web Simulator](https://pimoroni.github.io/badgeware-web-simulator/)
+by copying the app's `__init__.py` and local modules into the editor and
+uploading binary assets through the Files panel.
 
 Check every app in one team folder:
 
@@ -130,23 +122,10 @@ Check every app in one team folder:
 python3 .github/skills/badge-app-builder/scripts/validate_submissions.py Team1
 ```
 
-Useful simulator options:
-
-- `--screenshots screenshots` and press F12 for a native 160x120 capture.
-- `--clean` to clear saved simulator state and cached data.
-- `--perf` to show frame time and estimated badge asset memory.
-- `R` to hot-reload after editing.
-- `H` or `Esc` to return to the launcher.
-- `F` to show the device frame.
-- `P` to toggle simulated charging.
-- `1`-`9` to simulate IR beacon events.
-
-The local simulator does not prove BLE, GPIO, real IR timing, LED behavior,
+The web simulator does not prove BLE, GPIO, real IR timing, LED behavior,
 battery behavior, radio conditions, or exact RP2350 MicroPython performance.
-For a browser-based simulator, see the
-[Pimoroni Badgeware Web Simulator](https://pimoroni.github.io/badgeware-web-simulator/).
-Use the local simulator when you need the Campus workflow, local files, or
-repeatable command-line checks.
+If you want offline or command-line testing, see
+[`pimoroni/badgeware-simulator`](https://github.com/pimoroni/badgeware-simulator).
 
 ## Deploy to a physical badge
 

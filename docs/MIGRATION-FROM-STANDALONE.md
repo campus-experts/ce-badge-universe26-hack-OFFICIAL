@@ -30,9 +30,7 @@ team-wide validator in the new checkout.
 - Update the team fork from `upstream/main`.
 - Run `validate_app.py` for each app.
 - Run `validate_submissions.py TeamN`.
-- Test in the [Pimoroni Badgeware Web Simulator](https://pimoroni.github.io/badgeware-web-simulator/)
-  (preferred for a quick check) and the local simulator (better for
-  repository-local, command-line testing).
+- Test in the [Pimoroni Badgeware Web Simulator](https://pimoroni.github.io/badgeware-web-simulator/).
 - List all physical-badge checks that remain.
 
 The old standalone repository should remain available as a historical

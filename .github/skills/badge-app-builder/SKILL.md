@@ -1,7 +1,7 @@
 ---
 name: badge-app-builder
 description: Build, debug, validate, emulate, and deploy MicroPython apps for the GitHub Hackable Conference Badge. Use when someone has an app idea, edits TeamN apps or badge/apps examples, asks about Badgeware, runs the badge simulator, or wants to test on a physical BADGER device.
-compatibility: Requires Python 3.10+ for bundled tools. Emulator use requires Pygame and optionally psutil. Physical deployment requires a mounted BADGER USB volume. Advanced API verification may require GitHub access.
+compatibility: Requires Python 3.10+ for bundled tools (standard library only). Emulator use requires a browser and no local install. Physical deployment requires a mounted BADGER USB volume. Advanced API verification may require GitHub access.
 license: MIT
 metadata:
   summary: Turn an idea into a validated badge app for the emulator and physical hardware.
@@ -83,28 +83,19 @@ Validation is advisory for runtime behavior. It does not replace running the emu
 
 ## Develop in the emulator
 
-Use the browser simulator for a quick visual preview when it supports the
-feature being tested. Use the local simulator for repository files, hot reload,
-command-line checks, and repeatable validation. Neither simulator proves
-physical-badge behavior.
+Use the [Pimoroni Badgeware Web Simulator](https://pimoroni.github.io/badgeware-web-simulator/)
+for a quick visual preview when it supports the feature being tested. It does
+not prove physical-badge behavior.
 
-Run:
-
-```bash
-python3 simulator/badge_simulator.py Team1/<app-name>
-```
-
-Use hot reload, screenshots, clean state, and performance profiling as described in [references/emulator.md](references/emulator.md). Do not claim BLE, GPIO, true timing, memory pressure, power behavior, or accessory behavior works merely because the app loads in the emulator.
+See [references/emulator.md](references/emulator.md) for controls and setup.
+Do not claim BLE, GPIO, true timing, memory pressure, power behavior, or
+accessory behavior works merely because the app loads in the simulator.
 
 For a meaningful emulator iteration:
 
 1. Exercise every screen and button path.
 2. Test first-run and persisted-state behavior.
-3. Use `--clean` for first-run network/state flows.
-4. Use `--perf` for asset and frame-time risks.
-5. Capture a native screenshot for the selected display mode when visual output
-   matters.
-6. Re-run the validator after changes.
+3. Re-run the validator after changes.
 
 ## Deploy to a physical badge
 
