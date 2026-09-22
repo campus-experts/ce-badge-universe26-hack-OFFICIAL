@@ -113,7 +113,8 @@ python3 .github/skills/badge-app-builder/scripts/validate_app.py \
 ```
 
 Run it in the [Pimoroni Badgeware Web Simulator](https://pimoroni.github.io/badgeware-web-simulator/)
-by pasting in the app's `__init__.py` (and any local modules/assets).
+by copying the app's `__init__.py` and local modules into the editor and
+uploading binary assets through the Files panel.
 
 Check every app in one team folder:
 
