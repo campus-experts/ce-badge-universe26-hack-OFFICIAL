@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import builtins
 import importlib.util
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 
 SCRIPT_DIR = Path(__file__).resolve().parents[1] / "scripts"
@@ -32,6 +34,57 @@ class SkillScriptTests(unittest.TestCase):
         font.parent.mkdir(parents=True)
         font.write_bytes(b"test-font")
 
+    def run_generated_path_setup(
+        self,
+        source: str,
+        directories: set[str],
+        files: set[str],
+    ):
+        class FakeOS:
+            def __init__(self):
+                self.cwd = "/"
+
+            def resolve(self, path: str) -> str:
+                if path.startswith("/"):
+                    return path
+                if self.cwd == "/":
+                    return "/" + path
+                return self.cwd.rstrip("/") + "/" + path
+
+            def stat(self, path: str):
+                resolved = self.resolve(path)
+                if resolved not in directories and resolved not in files:
+                    raise OSError(resolved)
+                return ()
+
+            def chdir(self, path: str):
+                resolved = self.resolve(path)
+                if resolved not in directories:
+                    raise OSError(resolved)
+                self.cwd = resolved
+
+        fake_os = FakeOS()
+        fake_sys = SimpleNamespace(path=[])
+        real_import = builtins.__import__
+
+        def fake_import(name, *args, **kwargs):
+            if name == "os":
+                return fake_os
+            if name == "sys":
+                return fake_sys
+            return real_import(name, *args, **kwargs)
+
+        app_builtins = vars(builtins).copy()
+        app_builtins["__import__"] = fake_import
+        namespace = {
+            "__builtins__": app_builtins,
+            "screen": SimpleNamespace(font=None),
+            "font": SimpleNamespace(sins=object()),
+            "run": lambda update: None,
+        }
+        exec(compile(source, "<generated-app>", "exec"), namespace)
+        return namespace["APP_DIR"], fake_os, fake_sys
+
     def test_scaffold_creates_valid_app(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -49,9 +102,31 @@ class SkillScriptTests(unittest.TestCase):
             )
             source = (app_dir / "__init__.py").read_text(encoding="utf-8")
             self.assertNotIn("os.path", source)
-            self.assertIn('"/remote/apps/demo-app"', source)
-            self.assertIn('"/system/apps/demo-app"', source)
-            self.assertIn('"/apps/demo-app"', source)
+
+            layouts = {
+                "remote simulator mount": "/remote/apps/demo-app",
+                "Universe badge": "/system/apps/demo-app",
+                "Tufty badge": "/apps/demo-app",
+                "root app mount": "/demo-app",
+                "root-level web simulator": "/",
+            }
+            for name, expected_dir in layouts.items():
+                with self.subTest(layout=name):
+                    asset_path = (
+                        "/icon.png"
+                        if expected_dir == "/"
+                        else expected_dir + "/icon.png"
+                    )
+                    selected, fake_os, fake_sys = self.run_generated_path_setup(
+                        source,
+                        {expected_dir},
+                        {asset_path},
+                    )
+
+                    self.assertEqual(selected, expected_dir)
+                    self.assertEqual(fake_os.cwd, expected_dir)
+                    self.assertEqual(fake_sys.path[0], expected_dir)
+                    fake_os.stat("icon.png")
 
     def test_scaffold_accepts_digit_leading_app_name(self):
         with tempfile.TemporaryDirectory() as temp:
