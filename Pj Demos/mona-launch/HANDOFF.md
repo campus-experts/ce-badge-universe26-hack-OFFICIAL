@@ -8,10 +8,11 @@ This is an owner-managed demo, not a TeamN submission.
 ## App
 
 Mona Launch uses a held, controlled upward flick to launch Mona, shows her
-flight and peak height, and saves the best score. A separate button press is
-available as a test fallback. The app waits for the title-screen button to be
-released before accepting a flick or test press, so one press cannot open
-READY and launch Mona at the same time.
+flight and peak height, and saves the best score. The detector projects the
+motion onto the current gravity baseline so sideways and downward impulses do
+not launch her. A separate button press is available as a test fallback. The
+app waits for the title-screen button to be released before accepting a flick
+or test press, so one press cannot open READY and launch Mona at the same time.
 
 The app needs:
 
@@ -86,8 +87,10 @@ launch. The READY state now waits for the start button to be released and
 resets the motion baseline before it accepts another action.
 
 Ordinary handling then triggered the original 0.18g, largest-axis detector.
-The app now uses a 0.5g three-axis change threshold. This passed the physical
-check recorded above; tune it only from a new controlled test.
+The first transferred version used a directionless 0.5g three-axis magnitude.
+The app now requires a 0.5g signed impulse in the upward direction relative to
+the gravity baseline, rejecting opposite and lateral movement. The signed
+detector and the HIRES-scaled layout still require a new physical check.
 
 ## Serial and deployment cautions
 

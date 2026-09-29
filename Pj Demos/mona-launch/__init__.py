@@ -9,9 +9,9 @@ APP_DIR = os.path.dirname(__file__) or "/system/apps/mona-launch"
 sys.path.insert(0, APP_DIR)
 os.chdir(APP_DIR)
 
-SCREEN_W = 160
-SCREEN_H = 120
-GROUND_Y = 108
+BASE_W = 160
+BASE_H = 120
+BASE_GROUND_Y = 108
 MAX_HEIGHT = 100
 FLICK_THRESHOLD_G = 0.5
 FLICK_STRENGTH_RANGE_G = 0.8
@@ -56,28 +56,36 @@ class MotionInput:
             self.baseline = acceleration
             return None
 
-        dx = acceleration[0] - self.baseline[0]
-        dy = acceleration[1] - self.baseline[1]
-        dz = acceleration[2] - self.baseline[2]
-        change_squared = dx * dx + dy * dy + dz * dz
+        baseline_length = math.sqrt(sum(value * value for value in self.baseline))
+        if baseline_length < 0.5:
+            self.baseline = acceleration
+            return None
+
+        change = tuple(
+            new - old
+            for old, new in zip(self.baseline, acceleration)
+        )
+        upward_change = sum(
+            delta * gravity / baseline_length
+            for delta, gravity in zip(change, self.baseline)
+        )
         self.baseline = tuple(
             (old * 0.9) + (new * 0.1)
             for old, new in zip(self.baseline, acceleration)
         )
 
         if (
-            change_squared < FLICK_THRESHOLD_G ** 2
+            upward_change < FLICK_THRESHOLD_G
             or badge.ticks < self.cooldown_until
         ):
             return None
 
-        change = math.sqrt(change_squared)
         self.cooldown_until = badge.ticks + 900
         return min(
             1.0,
             max(
                 0.0,
-                (change - FLICK_THRESHOLD_G) / FLICK_STRENGTH_RANGE_G,
+                (upward_change - FLICK_THRESHOLD_G) / FLICK_STRENGTH_RANGE_G,
             ),
         )
 
@@ -185,7 +193,7 @@ class Game:
             self.enter_ready()
 
     def screen_y(self):
-        return GROUND_Y - min(MAX_HEIGHT, max(0, int(self.height)))
+        return BASE_GROUND_Y - min(MAX_HEIGHT, max(0, int(self.height)))
 
     def draw(self):
         screen.pen = background
@@ -228,24 +236,32 @@ class Game:
         draw_height_scale(self.peak)
         y = self.screen_y()
         for index, point in enumerate(self.trail):
-            trail_y = GROUND_Y - min(MAX_HEIGHT, max(0, int(point[1])))
+            trail_y = BASE_GROUND_Y - min(MAX_HEIGHT, max(0, int(point[1])))
             alpha = 30 + (index * 12)
             screen.pen = color.rgb(211, 250, 55, alpha)
-            screen.shape(shape.circle(80, trail_y + 10, max(1, index // 3 + 1)))
+            screen.shape(
+                shape.circle(
+                    layout_x(80),
+                    layout_y(trail_y + 10),
+                    layout_size(max(1, index // 3 + 1)),
+                )
+            )
         for x, sparkle_y, created in self.sparkles:
             age = badge.ticks - created
             screen.pen = color.rgb(255, 255, 255, max(0, 180 - age // 3))
-            screen.shape(shape.circle(x, sparkle_y, 1))
+            screen.shape(
+                shape.circle(layout_x(x), layout_y(sparkle_y), layout_size(1))
+            )
         draw_mona(80, y, int(badge.ticks / 100) % 7)
         screen.font = small_font
         screen.pen = white
-        screen.text("HEIGHT", 5, 4)
+        screen.text("HEIGHT", layout_x(5), layout_y(4))
         screen.font = large_font
         screen.pen = green
-        screen.text(str(int(max(0, self.height))), 5, 15)
+        screen.text(str(int(max(0, self.height))), layout_x(5), layout_y(15))
         screen.font = small_font
         screen.pen = muted
-        screen.text("m", 31, 21)
+        screen.text("m", layout_x(31), layout_y(21))
 
     def draw_result(self):
         draw_world(self.peak)
@@ -267,43 +283,62 @@ class Game:
 def draw_world(height):
     width = screen.width
     screen_height = screen.height
+    ground_y = layout_y(BASE_GROUND_Y)
     progress = min(1.0, max(0.0, height / MAX_HEIGHT))
 
-    for y in range(0, GROUND_Y, 4):
-        altitude = min(1.0, progress + ((GROUND_Y - y) / GROUND_Y) * 0.2)
+    for y in range(0, BASE_GROUND_Y, 4):
+        altitude = min(
+            1.0,
+            progress + ((BASE_GROUND_Y - y) / BASE_GROUND_Y) * 0.2,
+        )
         screen.pen = color.rgb(*sky_color(altitude))
-        screen.shape(shape.rectangle(0, y, width, 4))
+        screen.shape(
+            shape.rectangle(
+                0,
+                layout_y(y),
+                width,
+                layout_y(min(BASE_GROUND_Y, y + 4)) - layout_y(y),
+            )
+        )
 
     if progress < 0.42:
         cloud_alpha = int(150 * (1.0 - progress / 0.42))
         screen.pen = color.rgb(245, 252, 255, cloud_alpha)
-        screen.shape(shape.circle(27, 31, 8))
-        screen.shape(shape.circle(37, 28, 11))
-        screen.shape(shape.circle(49, 32, 7))
-        screen.shape(shape.rectangle(26, 32, 25, 7))
+        screen.shape(shape.circle(layout_x(27), layout_y(31), layout_size(8)))
+        screen.shape(shape.circle(layout_x(37), layout_y(28), layout_size(11)))
+        screen.shape(shape.circle(layout_x(49), layout_y(32), layout_size(7)))
+        screen.shape(scaled_rectangle(26, 32, 25, 7))
 
     if progress > 0.28:
         star_alpha = int(220 * min(1.0, (progress - 0.28) / 0.5))
         screen.pen = color.rgb(255, 255, 255, star_alpha)
         for x, y in ((15, 18), (62, 13), (119, 23), (145, 12), (101, 38), (31, 56)):
-            screen.shape(shape.circle(x, y, 1))
+            screen.shape(shape.circle(layout_x(x), layout_y(y), layout_size(1)))
 
     if progress > 0.72:
         planet_alpha = int(210 * min(1.0, (progress - 0.72) / 0.28))
         screen.pen = color.rgb(93, 121, 224, planet_alpha)
-        screen.shape(shape.circle(128, 43, 13))
+        screen.shape(shape.circle(layout_x(128), layout_y(43), layout_size(13)))
         screen.pen = color.rgb(184, 198, 255, planet_alpha // 2)
-        screen.shape(shape.circle(123, 39, 4))
-        screen.shape(shape.circle(134, 47, 3))
+        screen.shape(shape.circle(layout_x(123), layout_y(39), layout_size(4)))
+        screen.shape(shape.circle(layout_x(134), layout_y(47), layout_size(3)))
 
     ground_alpha = int(255 * max(0.0, 1.0 - (progress / 0.22)))
     if ground_alpha:
         screen.pen = color.rgb(36, 91, 52, ground_alpha)
-        screen.shape(shape.rectangle(0, GROUND_Y, width, screen_height - GROUND_Y))
+        screen.shape(shape.rectangle(0, ground_y, width, screen_height - ground_y))
         screen.pen = color.rgb(85, 160, 70, ground_alpha)
-        screen.shape(shape.line(0, GROUND_Y, width, GROUND_Y, 1))
-        for x in range(8, width, 17):
-            screen.shape(shape.line(x, GROUND_Y, x + 3, GROUND_Y - 4, 1))
+        screen.shape(shape.line(0, ground_y, width, ground_y, layout_size(1)))
+        for x in range(8, BASE_W, 17):
+            screen.shape(
+                shape.line(
+                    layout_x(x),
+                    ground_y,
+                    layout_x(x + 3),
+                    layout_y(BASE_GROUND_Y - 4),
+                    layout_size(1),
+                )
+            )
 
 
 def sky_color(progress):
@@ -326,33 +361,66 @@ def sky_color(progress):
 
 
 def draw_height_scale(peak):
+    ground_y = layout_y(BASE_GROUND_Y)
     screen.pen = color.rgb(255, 255, 255, 100)
-    screen.shape(shape.line(137, 8, 137, GROUND_Y, 1))
+    screen.shape(
+        shape.line(
+            layout_x(137),
+            layout_y(8),
+            layout_x(137),
+            ground_y,
+            layout_size(1),
+        )
+    )
     for height in range(0, 101, 20):
-        y = GROUND_Y - height
-        screen.shape(shape.line(134, y, 140, y, 1))
+        y = BASE_GROUND_Y - height
+        screen.shape(
+            shape.line(
+                layout_x(134),
+                layout_y(y),
+                layout_x(140),
+                layout_y(y),
+                layout_size(1),
+            )
+        )
         screen.font = small_font
         screen.pen = muted
-        screen.text(str(height), 143, y - 4)
+        screen.text(str(height), layout_x(143), layout_y(y - 4))
     if peak > 0:
-        y = GROUND_Y - min(MAX_HEIGHT, int(peak))
+        y = BASE_GROUND_Y - min(MAX_HEIGHT, int(peak))
         screen.pen = green
-        screen.shape(shape.line(126, y, 140, y, 1))
+        screen.shape(
+            shape.line(
+                layout_x(126),
+                layout_y(y),
+                layout_x(140),
+                layout_y(y),
+                layout_size(1),
+            )
+        )
 
 
 def draw_mona(x, y, frame):
     sprite = flying[frame % len(flying)]
-    screen.blit(sprite, x - 10, y - 20)
+    screen.blit(
+        sprite,
+        rect(
+            layout_x(x - 10),
+            layout_y(y - 20),
+            layout_x(24),
+            layout_y(24),
+        ),
+    )
     screen.pen = color.rgb(0, 0, 0, 45)
-    screen.shape(shape.rectangle(x - 9, GROUND_Y - 2, 18, 3))
+    screen.shape(scaled_rectangle(x - 9, BASE_GROUND_Y - 2, 18, 3))
 
 
 def draw_score(best):
     screen.font = small_font
     screen.pen = muted
-    screen.text("BEST", 5, 103)
+    screen.text("BEST", layout_x(5), layout_y(103))
     screen.pen = green
-    screen.text(str(best) + " m", 31, 103)
+    screen.text(str(best) + " m", layout_x(31), layout_y(103))
 
 
 def title(label, y):
@@ -363,7 +431,29 @@ def title(label, y):
 
 def center(label, y):
     width, _ = screen.measure_text(label)
-    screen.text(label, (SCREEN_W - width) / 2, y)
+    screen.text(label, (screen.width - width) / 2, layout_y(y))
+
+
+def layout_x(value):
+    return value * screen.width / BASE_W
+
+
+def layout_y(value):
+    return value * screen.height / BASE_H
+
+
+def layout_size(value):
+    scale = min(screen.width / BASE_W, screen.height / BASE_H)
+    return max(1, int(round(value * scale)))
+
+
+def scaled_rectangle(x, y, width, height):
+    return shape.rectangle(
+        layout_x(x),
+        layout_y(y),
+        layout_x(width),
+        layout_y(height),
+    )
 
 
 game = Game()
