@@ -50,6 +50,14 @@ screen.shape(shape.rounded_rectangle(8, 8, 80, 24, 4))
 screen.text("Hello", 12, 12)
 ```
 
+Line shapes require a width argument:
+
+```python
+screen.shape(shape.line(x0, y0, x1, y1, 1))
+```
+
+Verify less common shape signatures against the target firmware before use.
+
 Images and sprites:
 
 ```python

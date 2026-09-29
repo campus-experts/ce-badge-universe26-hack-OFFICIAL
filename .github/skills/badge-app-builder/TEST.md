@@ -91,3 +91,22 @@ hardware checklist.
 - Rejects the premise that emulator loading proves GPIO behavior.
 - Verifies the exact API against first-party sources.
 - Identifies wiring, pin, voltage, driver, timing, and physical test needs.
+
+## Physical runtime API mismatch
+
+**Prompt**
+
+> My app works in the simulator but the connected badge says a module or
+> method is missing. Fix it without guessing.
+
+**Expected**
+
+- Reads `hardware/USB_SERIAL.md` and identifies the connected firmware before
+  changing code.
+- Captures the full error and verifies the missing name or method signature
+  against that firmware or its first-party source.
+- Checks every use of the same unsupported API and fixes them together.
+- Uses only one serial client and warns that connecting can stop the app.
+- Runs the app validator and tests the corrected path on the physical badge.
+- Keeps a device-specific sensor threshold in the app handoff, not as a
+  universal hardware rule.
