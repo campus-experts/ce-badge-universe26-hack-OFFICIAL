@@ -210,7 +210,7 @@ class Game:
         if int(badge.ticks / 500) % 2:
             screen.font = small_font
             screen.pen = white
-            center("A TO BEGIN", 101)
+            center("SELECT TO BEGIN", 101)
 
     def draw_ready(self):
         draw_world(0)
