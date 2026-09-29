@@ -47,6 +47,11 @@ class SkillScriptTests(unittest.TestCase):
             self.assertFalse(
                 [issue for issue in issues if "__main__" in issue.message]
             )
+            source = (app_dir / "__init__.py").read_text(encoding="utf-8")
+            self.assertNotIn("os.path", source)
+            self.assertIn('"/remote/apps/demo-app"', source)
+            self.assertIn('"/system/apps/demo-app"', source)
+            self.assertIn('"/apps/demo-app"', source)
 
     def test_scaffold_accepts_digit_leading_app_name(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -261,6 +266,29 @@ class SkillScriptTests(unittest.TestCase):
                 )
             )
 
+    def test_validator_rejects_os_path(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            app_dir = root / "Team1" / "desktop-path"
+            app_dir.mkdir(parents=True)
+            (app_dir / "__init__.py").write_text(
+                "import os\n"
+                "APP_DIR = os.path.dirname(__file__)\n"
+                "def update():\n"
+                "    pass\n"
+                "run(update)\n",
+                encoding="utf-8",
+            )
+
+            issues = validate_app.validate_app(app_dir, root)
+
+            self.assertTrue(
+                any(
+                    issue.severity == "ERROR" and "os.path" in issue.message
+                    for issue in issues
+                )
+            )
+
     def test_validator_accepts_imported_update(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -381,6 +409,21 @@ class SkillScriptTests(unittest.TestCase):
 
             destination = deploy_app.deploy(app_dir, mount, False, False, root)
             self.assertFalse(destination.exists())
+
+    def test_deploy_supports_tufty_apps_layout(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self.create_system_font(root)
+            app_dir = scaffold_app.scaffold(
+                "demo", "Demo", root / "Team1"
+            )
+            mount = root / "TUFTY"
+            (mount / "apps").mkdir(parents=True)
+
+            destination = deploy_app.deploy(app_dir, mount, True, False, root)
+
+            self.assertEqual(destination, mount / "apps" / "demo")
+            self.assertTrue((destination / "__init__.py").is_file())
 
     def test_deploy_rejects_secrets_hidden_files_and_bytecode(self):
         with tempfile.TemporaryDirectory() as temp:

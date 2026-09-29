@@ -248,6 +248,7 @@ class AppVisitor(ast.NodeVisitor):
         self.badgeware_names: list[tuple[str, int]] = []
         self.asset_paths: list[tuple[str, int]] = []
         self.resolution_warnings: list[tuple[str, int]] = []
+        self.unsupported_apis: list[tuple[str, int]] = []
         self._depth = 0
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
@@ -345,6 +346,16 @@ class AppVisitor(ast.NodeVisitor):
                         node.lineno,
                     )
                 )
+        self.generic_visit(node)
+
+    def visit_Attribute(self, node: ast.Attribute) -> None:
+        if (
+            isinstance(node.value, ast.Attribute)
+            and isinstance(node.value.value, ast.Name)
+            and node.value.value.id == "os"
+            and node.value.attr == "path"
+        ):
+            self.unsupported_apis.append(("os.path", node.lineno))
         self.generic_visit(node)
 
     def visit_Assign(self, node: ast.Assign) -> None:
@@ -644,6 +655,18 @@ def validate_app(app_dir: Path, repo_root: Path, target: str = "both") -> list[I
 
         for message, line in visitor.resolution_warnings:
             issues.append(Issue("WARNING", message, python_file, line))
+
+        for api, line in visitor.unsupported_apis:
+            issues.append(
+                Issue(
+                    "ERROR",
+                    f"'{api}' is not available on the tested badge MicroPython "
+                    "runtime. Find the app directory with os.stat() and load app "
+                    "assets with relative paths.",
+                    python_file,
+                    line,
+                )
+            )
 
         if python_file == entrypoint:
             try:

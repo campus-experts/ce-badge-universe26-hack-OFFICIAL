@@ -71,7 +71,21 @@ def app_source(app_name: str, title: str) -> str:
 import os
 import sys
 
-APP_DIR = os.path.dirname(__file__) or "/system/apps/{app_name}"
+APP_DIRS = (
+    "/remote/apps/{app_name}",
+    "/system/apps/{app_name}",
+    "/apps/{app_name}",
+    "/{app_name}",
+)
+APP_DIR = APP_DIRS[0]
+for app_dir in APP_DIRS:
+    try:
+        os.stat(app_dir)
+        APP_DIR = app_dir
+        break
+    except OSError:
+        pass
+
 os.chdir(APP_DIR)
 sys.path.insert(0, APP_DIR)
 
