@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import builtins
 import importlib.util
 import sys
 import tempfile
 import unittest
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
+from types import SimpleNamespace
+from unittest.mock import patch
 
 
 SCRIPT_DIR = Path(__file__).resolve().parents[1] / "scripts"
@@ -32,6 +35,57 @@ class SkillScriptTests(unittest.TestCase):
         font.parent.mkdir(parents=True)
         font.write_bytes(b"test-font")
 
+    def run_generated_path_setup(
+        self,
+        source: str,
+        directories: set[str],
+        files: set[str],
+    ):
+        class FakeOS:
+            def __init__(self):
+                self.cwd = "/"
+
+            def resolve(self, path: str) -> str:
+                if path.startswith("/"):
+                    return path
+                if self.cwd == "/":
+                    return "/" + path
+                return self.cwd.rstrip("/") + "/" + path
+
+            def stat(self, path: str):
+                resolved = self.resolve(path)
+                if resolved not in directories and resolved not in files:
+                    raise OSError(resolved)
+                return ()
+
+            def chdir(self, path: str):
+                resolved = self.resolve(path)
+                if resolved not in directories:
+                    raise OSError(resolved)
+                self.cwd = resolved
+
+        fake_os = FakeOS()
+        fake_sys = SimpleNamespace(path=[])
+        real_import = builtins.__import__
+
+        def fake_import(name, *args, **kwargs):
+            if name == "os":
+                return fake_os
+            if name == "sys":
+                return fake_sys
+            return real_import(name, *args, **kwargs)
+
+        app_builtins = vars(builtins).copy()
+        app_builtins["__import__"] = fake_import
+        namespace = {
+            "__builtins__": app_builtins,
+            "screen": SimpleNamespace(font=None),
+            "font": SimpleNamespace(sins=object()),
+            "run": lambda update: None,
+        }
+        exec(compile(source, "<generated-app>", "exec"), namespace)
+        return namespace["APP_DIR"], fake_os, fake_sys
+
     def test_scaffold_creates_valid_app(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -47,6 +101,33 @@ class SkillScriptTests(unittest.TestCase):
             self.assertFalse(
                 [issue for issue in issues if "__main__" in issue.message]
             )
+            source = (app_dir / "__init__.py").read_text(encoding="utf-8")
+            self.assertNotIn("os.path", source)
+
+            layouts = {
+                "remote simulator mount": "/remote/apps/demo-app",
+                "Universe badge": "/system/apps/demo-app",
+                "Tufty badge": "/apps/demo-app",
+                "root app mount": "/demo-app",
+                "root-level web simulator": "/",
+            }
+            for name, expected_dir in layouts.items():
+                with self.subTest(layout=name):
+                    asset_path = (
+                        "/icon.png"
+                        if expected_dir == "/"
+                        else expected_dir + "/icon.png"
+                    )
+                    selected, fake_os, fake_sys = self.run_generated_path_setup(
+                        source,
+                        {expected_dir},
+                        {asset_path},
+                    )
+
+                    self.assertEqual(selected, expected_dir)
+                    self.assertEqual(fake_os.cwd, expected_dir)
+                    self.assertEqual(fake_sys.path[0], expected_dir)
+                    fake_os.stat("icon.png")
 
     def test_scaffold_accepts_digit_leading_app_name(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -261,6 +342,51 @@ class SkillScriptTests(unittest.TestCase):
                 )
             )
 
+    def test_validator_rejects_os_path_import_forms(self):
+        cases = {
+            "direct access": (
+                "import os\n"
+                "APP_DIR = os.path.dirname(__file__)\n"
+            ),
+            "aliased os module": (
+                "import os as badge_os\n"
+                "APP_DIR = badge_os.path.dirname(__file__)\n"
+            ),
+            "os.path submodule": (
+                "import os.path\n"
+                "APP_DIR = '/apps/demo'\n"
+            ),
+            "path imported from os": (
+                "from os import path\n"
+                "APP_DIR = path.dirname(__file__)\n"
+            ),
+            "aliased path imported from os": (
+                "from os import path as badge_path\n"
+                "APP_DIR = badge_path.dirname(__file__)\n"
+            ),
+        }
+        for name, import_source in cases.items():
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                app_dir = root / "Team1" / "desktop-path"
+                app_dir.mkdir(parents=True)
+                (app_dir / "__init__.py").write_text(
+                    import_source
+                    + "def update():\n"
+                    "    pass\n"
+                    "run(update)\n",
+                    encoding="utf-8",
+                )
+
+                issues = validate_app.validate_app(app_dir, root)
+
+                self.assertTrue(
+                    any(
+                        issue.severity == "ERROR" and "os.path" in issue.message
+                        for issue in issues
+                    )
+                )
+
     def test_validator_accepts_imported_update(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -381,6 +507,37 @@ class SkillScriptTests(unittest.TestCase):
 
             destination = deploy_app.deploy(app_dir, mount, False, False, root)
             self.assertFalse(destination.exists())
+
+    def test_deploy_supports_tufty_apps_layout(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self.create_system_font(root)
+            app_dir = scaffold_app.scaffold(
+                "demo", "Demo", root / "Team1"
+            )
+            mount = root / "TUFTY"
+            (mount / "apps").mkdir(parents=True)
+
+            destination = deploy_app.deploy(app_dir, mount, True, False, root)
+
+            self.assertEqual(destination, mount / "apps" / "demo")
+            self.assertTrue((destination / "__init__.py").is_file())
+
+    def test_mount_display_name_handles_windows_drive_root(self):
+        mount = PureWindowsPath("E:/")
+        with patch.object(
+            deploy_app,
+            "windows_volume_label",
+            return_value="TUFTY",
+        ):
+            self.assertEqual(deploy_app.mount_display_name(mount), "TUFTY")
+
+        with patch.object(
+            deploy_app,
+            "windows_volume_label",
+            return_value=None,
+        ):
+            self.assertEqual(deploy_app.mount_display_name(mount), "E:\\")
 
     def test_deploy_rejects_secrets_hidden_files_and_bytecode(self):
         with tempfile.TemporaryDirectory() as temp:

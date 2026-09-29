@@ -5,9 +5,24 @@ import sys
 
 from badgeware import State
 
-APP_DIR = os.path.dirname(__file__) or "/system/apps/mona-launch"
-sys.path.insert(0, APP_DIR)
+APP_DIRS = (
+    "/remote/apps/mona-launch",
+    "/system/apps/mona-launch",
+    "/apps/mona-launch",
+    "/mona-launch",
+    "/",
+)
+APP_DIR = APP_DIRS[0]
+for app_dir in APP_DIRS:
+    try:
+        os.stat(app_dir)
+        APP_DIR = app_dir
+        break
+    except OSError:
+        pass
+
 os.chdir(APP_DIR)
+sys.path.insert(0, APP_DIR)
 
 BASE_W = 160
 BASE_H = 120
@@ -25,7 +40,7 @@ orange = color.rgb(255, 166, 77)
 
 small_font = font.nope
 large_font = font.ziplock
-mona_sprites = image.load(os.path.join(APP_DIR, "mona.png")).spritesheet(7, 2)
+mona_sprites = image.load("mona.png").spritesheet(7, 2)
 flying = tuple(mona_sprites.sprite(frame) for frame in range(7))
 
 
