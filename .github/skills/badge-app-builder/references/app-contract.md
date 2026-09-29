@@ -35,6 +35,7 @@ APP_DIRS = (
     "/system/apps/my_app",
     "/apps/my_app",
     "/my_app",
+    "/",
 )
 APP_DIR = APP_DIRS[0]
 for app_dir in APP_DIRS:

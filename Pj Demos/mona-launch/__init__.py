@@ -10,6 +10,7 @@ APP_DIRS = (
     "/system/apps/mona-launch",
     "/apps/mona-launch",
     "/mona-launch",
+    "/",
 )
 APP_DIR = APP_DIRS[0]
 for app_dir in APP_DIRS:

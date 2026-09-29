@@ -350,10 +350,9 @@ class AppVisitor(ast.NodeVisitor):
 
     def visit_Attribute(self, node: ast.Attribute) -> None:
         if (
-            isinstance(node.value, ast.Attribute)
-            and isinstance(node.value.value, ast.Name)
-            and node.value.value.id == "os"
-            and node.value.attr == "path"
+            isinstance(node.value, ast.Name)
+            and node.value.id == "os"
+            and node.attr == "path"
         ):
             self.unsupported_apis.append(("os.path", node.lineno))
         self.generic_visit(node)
