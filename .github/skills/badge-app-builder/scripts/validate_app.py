@@ -249,6 +249,8 @@ class AppVisitor(ast.NodeVisitor):
         self.asset_paths: list[tuple[str, int]] = []
         self.resolution_warnings: list[tuple[str, int]] = []
         self.unsupported_apis: list[tuple[str, int]] = []
+        self.os_module_aliases = {"os"}
+        self.os_path_accesses: list[tuple[str, int]] = []
         self._depth = 0
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
@@ -297,6 +299,10 @@ class AppVisitor(ast.NodeVisitor):
     def visit_Import(self, node: ast.Import) -> None:
         for alias in node.names:
             self.imports.append((alias.name, node.lineno))
+            if alias.name == "os":
+                self.os_module_aliases.add(alias.asname or "os")
+            elif alias.name == "os.path":
+                self.unsupported_apis.append(("os.path", node.lineno))
             if self._depth == 0:
                 binding = alias.asname or module_root(alias.name)
                 self.bindings.add(binding)
@@ -305,6 +311,12 @@ class AppVisitor(ast.NodeVisitor):
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         module = node.module or ""
         self.imports.append((module, node.lineno))
+        if module == "os":
+            for alias in node.names:
+                if alias.name == "path":
+                    self.unsupported_apis.append(("os.path", node.lineno))
+        elif module == "os.path":
+            self.unsupported_apis.append(("os.path", node.lineno))
         if self._depth == 0:
             for alias in node.names:
                 binding = alias.asname or alias.name
@@ -351,10 +363,9 @@ class AppVisitor(ast.NodeVisitor):
     def visit_Attribute(self, node: ast.Attribute) -> None:
         if (
             isinstance(node.value, ast.Name)
-            and node.value.id == "os"
             and node.attr == "path"
         ):
-            self.unsupported_apis.append(("os.path", node.lineno))
+            self.os_path_accesses.append((node.value.id, node.lineno))
         self.generic_visit(node)
 
     def visit_Assign(self, node: ast.Assign) -> None:
@@ -660,6 +671,20 @@ def validate_app(app_dir: Path, repo_root: Path, target: str = "both") -> list[I
                 Issue(
                     "ERROR",
                     f"'{api}' is not available on the tested badge MicroPython "
+                    "runtime. Find the app directory with os.stat() and load app "
+                    "assets with relative paths.",
+                    python_file,
+                    line,
+                )
+            )
+
+        for owner, line in visitor.os_path_accesses:
+            if owner not in visitor.os_module_aliases:
+                continue
+            issues.append(
+                Issue(
+                    "ERROR",
+                    "'os.path' is not available on the tested badge MicroPython "
                     "runtime. Find the app directory with os.stat() and load app "
                     "assets with relative paths.",
                     python_file,

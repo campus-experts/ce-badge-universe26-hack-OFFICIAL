@@ -47,6 +47,10 @@ def windows_volume_label(path: Path) -> str | None:
         return None
 
 
+def mount_display_name(path: Path) -> str:
+    return windows_volume_label(path) or path.name or str(path)
+
+
 def candidate_mounts() -> list[Path]:
     user = getpass.getuser()
     candidates = [
@@ -191,7 +195,8 @@ def deploy(
             staging_root.rmdir()
 
     print(
-        f"Deployment complete. Eject {mount.name} safely, then press RESET once."
+        f"Deployment complete. Eject {mount_display_name(mount)} safely, "
+        "then press RESET once."
     )
     return destination
 

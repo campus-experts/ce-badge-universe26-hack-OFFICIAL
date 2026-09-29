@@ -5,8 +5,9 @@ import importlib.util
 import sys
 import tempfile
 import unittest
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from types import SimpleNamespace
+from unittest.mock import patch
 
 
 SCRIPT_DIR = Path(__file__).resolve().parents[1] / "scripts"
@@ -341,28 +342,50 @@ class SkillScriptTests(unittest.TestCase):
                 )
             )
 
-    def test_validator_rejects_os_path(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            app_dir = root / "Team1" / "desktop-path"
-            app_dir.mkdir(parents=True)
-            (app_dir / "__init__.py").write_text(
+    def test_validator_rejects_os_path_import_forms(self):
+        cases = {
+            "direct access": (
                 "import os\n"
                 "APP_DIR = os.path.dirname(__file__)\n"
-                "def update():\n"
-                "    pass\n"
-                "run(update)\n",
-                encoding="utf-8",
-            )
-
-            issues = validate_app.validate_app(app_dir, root)
-
-            self.assertTrue(
-                any(
-                    issue.severity == "ERROR" and "os.path" in issue.message
-                    for issue in issues
+            ),
+            "aliased os module": (
+                "import os as badge_os\n"
+                "APP_DIR = badge_os.path.dirname(__file__)\n"
+            ),
+            "os.path submodule": (
+                "import os.path\n"
+                "APP_DIR = '/apps/demo'\n"
+            ),
+            "path imported from os": (
+                "from os import path\n"
+                "APP_DIR = path.dirname(__file__)\n"
+            ),
+            "aliased path imported from os": (
+                "from os import path as badge_path\n"
+                "APP_DIR = badge_path.dirname(__file__)\n"
+            ),
+        }
+        for name, import_source in cases.items():
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                app_dir = root / "Team1" / "desktop-path"
+                app_dir.mkdir(parents=True)
+                (app_dir / "__init__.py").write_text(
+                    import_source
+                    + "def update():\n"
+                    "    pass\n"
+                    "run(update)\n",
+                    encoding="utf-8",
                 )
-            )
+
+                issues = validate_app.validate_app(app_dir, root)
+
+                self.assertTrue(
+                    any(
+                        issue.severity == "ERROR" and "os.path" in issue.message
+                        for issue in issues
+                    )
+                )
 
     def test_validator_accepts_imported_update(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -499,6 +522,22 @@ class SkillScriptTests(unittest.TestCase):
 
             self.assertEqual(destination, mount / "apps" / "demo")
             self.assertTrue((destination / "__init__.py").is_file())
+
+    def test_mount_display_name_handles_windows_drive_root(self):
+        mount = PureWindowsPath("E:/")
+        with patch.object(
+            deploy_app,
+            "windows_volume_label",
+            return_value="TUFTY",
+        ):
+            self.assertEqual(deploy_app.mount_display_name(mount), "TUFTY")
+
+        with patch.object(
+            deploy_app,
+            "windows_volume_label",
+            return_value=None,
+        ):
+            self.assertEqual(deploy_app.mount_display_name(mount), "E:\\")
 
     def test_deploy_rejects_secrets_hidden_files_and_bytecode(self):
         with tempfile.TemporaryDirectory() as temp:
