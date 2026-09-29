@@ -25,6 +25,12 @@ Help the user turn an idea into a badge app that works within the physical badge
    Universe 2026 `badge/` tree and hardware references in `badger/home`.
 7. Treat `badge25/` as the archived Universe 2025 runtime. Do not use its
    old drawing and input APIs for new apps.
+8. For a physical-device error, read `hardware/USB_SERIAL.md`, query the
+   connected firmware, and capture the exact traceback before changing code.
+   Verify names and call signatures against that build; the Tufty product name
+   alone does not identify its API. Serial access can interrupt the running
+   app, so use one serial client and confirm a command completed before asking
+   for a physical test.
 
 ## Turn an idea into a badge design
 
@@ -44,8 +50,9 @@ Make reasonable product decisions when the request is open-ended. Ask only when 
 
 In this Campus Experts repository, create submissions under the assigned
 `TeamN/<app-name>/` folder. Treat `badge/apps/` as read-only examples and shared
-badge code unless the user explicitly asks to maintain them. For a new Team 1
-app, run:
+badge code unless the user explicitly asks to maintain them. A repo owner may
+request a demo outside the team-submission workflow; use the requested demo
+folder and do not label it as a TeamN submission. For a new Team 1 app, run:
 
 ```bash
 python3 .github/skills/badge-app-builder/scripts/scaffold_app.py <app-name> \
