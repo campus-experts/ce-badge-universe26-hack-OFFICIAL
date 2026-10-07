@@ -71,14 +71,21 @@ def app_source(app_name: str, title: str) -> str:
 import os
 import sys
 
+APP_DIR = os.getcwd()
+APP_FILE = globals().get("__file__", "")
+if "/" in APP_FILE:
+    APP_DIR = APP_FILE.rsplit("/", 1)[0] or "/"
+    if not APP_DIR.startswith("/"):
+        APP_DIR = os.getcwd().rstrip("/") + "/" + APP_DIR
+
 APP_DIRS = (
+    APP_DIR,
     "/remote/apps/{app_name}",
     "/system/apps/{app_name}",
     "/apps/{app_name}",
     "/{app_name}",
     "/",
 )
-APP_DIR = APP_DIRS[0]
 for app_dir in APP_DIRS:
     try:
         os.stat(app_dir)

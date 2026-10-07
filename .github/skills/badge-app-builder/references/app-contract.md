@@ -25,19 +25,30 @@ assets. The same source must work in the simulator, from a temporary remote
 mount, and after a manual copy to either supported badge filesystem layout.
 The tested Tufty MicroPython build does not provide desktop Python's
 `os.path`, so do not use `os.path.dirname(__file__)` or `os.path.join()`.
+Prefer the executing file's directory when `__file__` includes a path;
+otherwise preserve the launcher's current working directory (including `/`
+for web-editor runs). Only then try fixed locations, so a same-named built-in
+app cannot take precedence over the running app's modules and assets.
 
 ```python
 import os
 import sys
 
+APP_DIR = os.getcwd()
+APP_FILE = globals().get("__file__", "")
+if "/" in APP_FILE:
+    APP_DIR = APP_FILE.rsplit("/", 1)[0] or "/"
+    if not APP_DIR.startswith("/"):
+        APP_DIR = os.getcwd().rstrip("/") + "/" + APP_DIR
+
 APP_DIRS = (
+    APP_DIR,
     "/remote/apps/my_app",
     "/system/apps/my_app",
     "/apps/my_app",
     "/my_app",
     "/",
 )
-APP_DIR = APP_DIRS[0]
 for app_dir in APP_DIRS:
     try:
         os.stat(app_dir)

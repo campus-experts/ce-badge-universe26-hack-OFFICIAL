@@ -13,9 +13,11 @@ https://pimoroni.github.io/badgeware-web-simulator/ (or https://try.badgewa.re),
 copy the app's `__init__.py` and local modules into the editor, upload binary
 assets with the Files panel, and press F5 or **Run**.
 
-Use the app-directory pattern in [app-contract.md](app-contract.md). It checks
-the simulator's `/remote/apps/<name>` location and the physical badge
-locations without using unsupported desktop-only `os.path` helpers. After the
+Use the app-directory pattern in [app-contract.md](app-contract.md). It prefers
+the executing file's directory or the current working directory (`/` for
+editor runs) before checking `/remote/apps/<name>` and physical badge
+locations, so a same-named built-in app cannot override uploaded assets.
+It does not use unsupported desktop-only `os.path` helpers. After the
 app changes into its directory, use relative paths for local modules and
 assets.
 

@@ -22,10 +22,13 @@ The app needs:
 
 The empty `assets/` directory from the source app was not copied.
 
-The app checks `/remote/apps/mona-launch`, `/system/apps/mona-launch`,
-`/apps/mona-launch`, `/mona-launch`, and `/` in that order. It uses
-`os.stat()` instead of `os.path`, which is not available on the tested Tufty
-MicroPython build.
+The app first uses the executing file's directory when available, otherwise
+the launcher's current working directory (including `/` for web-editor runs).
+If that directory is unavailable, it checks `/remote/apps/mona-launch`,
+`/system/apps/mona-launch`, `/apps/mona-launch`, `/mona-launch`, and `/` in
+that order. This avoids selecting another installed app with the same name.
+It uses `os.stat()` instead of `os.path`, which is not available on the tested
+Tufty MicroPython build.
 
 ## Physical test record
 

@@ -5,14 +5,21 @@ import sys
 
 from badgeware import State
 
+APP_DIR = os.getcwd()
+APP_FILE = globals().get("__file__", "")
+if "/" in APP_FILE:
+    APP_DIR = APP_FILE.rsplit("/", 1)[0] or "/"
+    if not APP_DIR.startswith("/"):
+        APP_DIR = os.getcwd().rstrip("/") + "/" + APP_DIR
+
 APP_DIRS = (
+    APP_DIR,
     "/remote/apps/mona-launch",
     "/system/apps/mona-launch",
     "/apps/mona-launch",
     "/mona-launch",
     "/",
 )
-APP_DIR = APP_DIRS[0]
 for app_dir in APP_DIRS:
     try:
         os.stat(app_dir)

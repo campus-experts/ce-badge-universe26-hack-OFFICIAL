@@ -40,10 +40,15 @@ class SkillScriptTests(unittest.TestCase):
         source: str,
         directories: set[str],
         files: set[str],
+        cwd: str = "/",
+        app_file: str | None = None,
     ):
         class FakeOS:
             def __init__(self):
-                self.cwd = "/"
+                self.cwd = cwd
+
+            def getcwd(self):
+                return self.cwd
 
             def resolve(self, path: str) -> str:
                 if path.startswith("/"):
@@ -83,6 +88,8 @@ class SkillScriptTests(unittest.TestCase):
             "font": SimpleNamespace(sins=object()),
             "run": lambda update: None,
         }
+        if app_file is not None:
+            namespace["__file__"] = app_file
         exec(compile(source, "<generated-app>", "exec"), namespace)
         return namespace["APP_DIR"], fake_os, fake_sys
 
@@ -120,14 +127,67 @@ class SkillScriptTests(unittest.TestCase):
                     )
                     selected, fake_os, fake_sys = self.run_generated_path_setup(
                         source,
-                        {expected_dir},
+                        {"/", expected_dir},
                         {asset_path},
+                        app_file="/missing/__init__.py",
                     )
 
                     self.assertEqual(selected, expected_dir)
                     self.assertEqual(fake_os.cwd, expected_dir)
                     self.assertEqual(fake_sys.path[0], expected_dir)
                     fake_os.stat("icon.png")
+
+    def test_app_directory_precedes_same_named_system_app(self):
+        skill_dir = SCRIPT_DIR.parent
+        mona_source = (
+            skill_dir.parents[2] / "Pj Demos" / "mona-launch" / "__init__.py"
+        ).read_text(encoding="utf-8")
+        contract = (skill_dir / "references" / "app-contract.md").read_text(
+            encoding="utf-8"
+        )
+        sources = {
+            "scaffold": ("clock", scaffold_app.app_source("clock", "Clock")),
+            "contract": (
+                "my_app",
+                contract.split("```python\n", 1)[1].split("```", 1)[0],
+            ),
+            "Mona Launch": (
+                "mona-launch",
+                "import os\nimport sys\n"
+                + mona_source[
+                    mona_source.index("APP_DIR"):mona_source.index("\nBASE_W")
+                ],
+            ),
+        }
+        for source_name, (app_name, source) in sources.items():
+            system_dir = "/system/apps/" + app_name
+            layouts = (
+                ("/", "/", None),
+                ("/remote/apps/" + app_name, "/remote/apps/" + app_name, None),
+                ("/apps/" + app_name, "/apps/" + app_name, None),
+                (
+                    "/uploads/" + app_name,
+                    "/system/apps/menu",
+                    "/uploads/" + app_name + "/__init__.py",
+                ),
+                ("/uploads/" + app_name, "/uploads", app_name + "/__init__.py"),
+                ("/", "/system/apps/menu", "/__init__.py"),
+                ("/", "/", "__init__.py"),
+            )
+            for expected_dir, cwd, app_file in layouts:
+                with self.subTest(source=source_name, cwd=cwd, app_file=app_file):
+                    asset = expected_dir.rstrip("/") + "/app-only.png"
+                    selected, fake_os, fake_sys = self.run_generated_path_setup(
+                        source,
+                        {expected_dir, cwd, system_dir},
+                        {asset, system_dir + "/icon.png"},
+                        cwd=cwd,
+                        app_file=app_file,
+                    )
+                    self.assertEqual(selected, expected_dir)
+                    self.assertEqual(fake_os.cwd, expected_dir)
+                    self.assertEqual(fake_sys.path[0], expected_dir)
+                    fake_os.stat("app-only.png")
 
     def test_scaffold_accepts_digit_leading_app_name(self):
         with tempfile.TemporaryDirectory() as temp:
