@@ -249,7 +249,7 @@ class AppVisitor(ast.NodeVisitor):
         self.asset_paths: list[tuple[str, int]] = []
         self.resolution_warnings: list[tuple[str, int]] = []
         self.unsupported_apis: list[tuple[str, int]] = []
-        self.os_module_aliases = {"os"}
+        self.os_module_aliases: set[str] = set()
         self.os_path_accesses: list[tuple[str, int]] = []
         self._depth = 0
 
