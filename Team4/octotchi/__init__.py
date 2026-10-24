@@ -142,14 +142,25 @@ def update():
     global state, tick_ms, levelup_ms, idle_ms, xp
     tick_ms = (tick_ms + badge.ticks_delta) % 1000000
     levelup_ms = max(0, levelup_ms - badge.ticks_delta)
-    idle_ms += badge.ticks_delta
-    if idle_ms >= 3000:
-        idle_ms = 0
-        xp = max(0, xp - 5)
 
-    if badge.pressed(BUTTON_LEFT) or badge.pressed(BUTTON_RIGHT):
+    view_pressed = badge.pressed(BUTTON_LEFT) or badge.pressed(BUTTON_RIGHT)
+    commit_pressed = badge.pressed(BUTTON_SELECT) or badge.pressed(BUTTON_UP)
+    if view_pressed or commit_pressed:
+        idle_ms = 0
+    else:
+        idle_ms += badge.ticks_delta
+
+    if idle_ms >= 3000:
+        idle_ms -= 3000
+        new_xp = max(0, xp - 5)
+        if new_xp != xp:
+            xp = new_xp
+            saved["xp"] = xp
+            State.save("octotchi", saved)
+
+    if view_pressed:
         state = STATE_HEATMAP if state == STATE_PET else STATE_PET
-    if badge.pressed(BUTTON_SELECT) or badge.pressed(BUTTON_UP):
+    if commit_pressed:
         add_commit()
     eval_mood()
 
