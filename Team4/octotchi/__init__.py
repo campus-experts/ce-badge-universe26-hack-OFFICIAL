@@ -128,7 +128,7 @@ def draw_pet():
     rect(26, 74, int(xp * 96 / MAX_XP), 4, HEAT[3])
 
     screen.pen = TEXT
-    screen.text("Sel:Commit L/R:Graph", 4, screen.height - 14)
+    screen.text("UP:Commit  L/R:Graph", 4, screen.height - 14)
 
 
 def draw_heatmap():
@@ -139,7 +139,7 @@ def draw_heatmap():
             rect(12 + col * 8, 22 + row * 8, 6, 6, HEAT[grid[row][col]])
     screen.pen = TEXT
     screen.text("Total: %d commits" % commits, 4, 84)
-    screen.text("Sel:+1  L/R:Back", 4, screen.height - 14)
+    screen.text("UP:+1  BACK/L/R:Pet", 4, screen.height - 14)
 
 
 def update():
@@ -149,7 +149,8 @@ def update():
 
     view_pressed = badge.pressed(BUTTON_LEFT) or badge.pressed(BUTTON_RIGHT)
     commit_pressed = badge.pressed(BUTTON_SELECT) or badge.pressed(BUTTON_UP)
-    if view_pressed or commit_pressed:
+    back_pressed = "BUTTON_BACK" in globals() and badge.pressed(BUTTON_BACK)
+    if view_pressed or commit_pressed or back_pressed:
         idle_ms = 0
     else:
         idle_ms += badge.ticks_delta
@@ -162,7 +163,9 @@ def update():
             saved["xp"] = xp
             State.save("octotchi", saved)
 
-    if view_pressed:
+    if back_pressed and state == STATE_HEATMAP:
+        state = STATE_PET
+    elif view_pressed:
         state = STATE_HEATMAP if state == STATE_PET else STATE_PET
     if commit_pressed:
         add_commit()
