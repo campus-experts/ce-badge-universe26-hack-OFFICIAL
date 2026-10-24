@@ -3,6 +3,11 @@ from badgeware import State
 STATE_PET = 0
 STATE_HEATMAP = 1
 
+if "BUTTON_LEFT" not in globals():
+    BUTTON_LEFT = BUTTON_A
+    BUTTON_RIGHT = BUTTON_C
+    BUTTON_SELECT = BUTTON_B
+
 MOOD_REST = 0
 MOOD_ACTIVE = 1
 MOOD_FLOW = 2
